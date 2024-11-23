@@ -49,6 +49,9 @@ class MainApp(QMainWindow):
         self.data_loader.data_loaded.connect(self.data_preview.update_preview)
         self.data_loader.data_loaded.connect(self.data_analysis.update_columns)
 
+        # 数据加载完成后自动跳转到“数据预览”界面
+        self.data_loader.data_loaded.connect(lambda: self.tabs.setCurrentIndex(1))
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     main_window = MainApp()
