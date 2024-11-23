@@ -1,119 +1,182 @@
-import os
-import importlib
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QTreeWidget, QTreeWidgetItem,
-    QPushButton, QStackedWidget, QHBoxLayout, QListWidget, QListWidgetItem
+    QWidget, QVBoxLayout, QLabel, QPushButton, QTreeWidget, QTreeWidgetItem,
+    QStackedWidget, QListWidget, QHBoxLayout, QListWidgetItem, QColorDialog,
+    QLineEdit, QCheckBox, QSpinBox, QFileDialog
 )
 from PyQt5.QtCore import Qt
-
+import importlib
+import os
+import sys
+import random
 
 class DataAnalysis(QWidget):
     def __init__(self):
         super().__init__()
-        self.data = None  # 当前加载的数据
         self.init_ui()
+        self.data = None  # 用于存储当前加载的数据
 
     def init_ui(self):
-        layout = QVBoxLayout()
+        main_layout = QHBoxLayout()
 
-        # 树状算法选择器
+        # 左侧：算法树状选择控件
         self.algorithm_tree = QTreeWidget()
-        self.algorithm_tree.setHeaderLabel("选择算法")
-        self.algorithm_tree.itemClicked.connect(self.display_algorithm_config)
+        self.algorithm_tree.setHeaderLabel("算法选择")
+        self.load_algorithms()
+        self.algorithm_tree.itemClicked.connect(self.on_algorithm_selected)
 
-        # 参数输入区
-        self.param_input_area = QStackedWidget()
+        # 右侧：参数设置和执行区域
+        self.right_layout = QVBoxLayout()
 
-        # 数据列选择部分
-        column_selection_layout = QHBoxLayout()
-        self.all_columns_list = QListWidget()  # 显示所有列名
-        self.selected_columns_list = QListWidget()  # 显示已选择的列
-        column_selection_layout.addWidget(QLabel("所有列："))
-        column_selection_layout.addWidget(self.all_columns_list)
-        column_selection_layout.addWidget(QLabel("选择列："))
-        column_selection_layout.addWidget(self.selected_columns_list)
+        # 参数设置区域（动态变化）
+        self.parameter_widget = QWidget()
+        self.parameter_layout = QVBoxLayout()
+        self.parameter_widget.setLayout(self.parameter_layout)
 
-        # 运行按钮
-        self.run_button = QPushButton("运行算法")
+        # 执行按钮
+        self.run_button = QPushButton("运行分析")
         self.run_button.clicked.connect(self.run_analysis)
 
         # 状态标签
-        self.status_label = QLabel("请先选择算法")
+        self.status_label = QLabel("请选择算法并设置参数")
 
-        # 添加控件到布局
-        layout.addWidget(QLabel("算法选择："))
-        layout.addWidget(self.algorithm_tree)
-        layout.addWidget(QLabel("参数配置："))
-        layout.addWidget(self.param_input_area)
-        layout.addLayout(column_selection_layout)
-        layout.addWidget(self.run_button)
-        layout.addWidget(self.status_label)
-        self.setLayout(layout)
+        # 将控件添加到右侧布局
+        self.right_layout.addWidget(self.parameter_widget)
+        self.right_layout.addWidget(self.run_button)
+        self.right_layout.addWidget(self.status_label)
+        self.right_layout.addStretch()
 
-        # 加载算法
-        self.load_algorithms()
+        # 添加左右布局
+        main_layout.addWidget(self.algorithm_tree, 1)
+        main_layout.addLayout(self.right_layout, 2)
+        self.setLayout(main_layout)
+
+        # 保存当前选中的算法信息
+        self.current_algorithm = None
+        self.current_algorithm_module = None
 
     def load_algorithms(self):
         """
-        加载 `method` 文件夹中的所有算法，并构建树状选择器
+        加载 method/ 目录下的算法，并构建树状结构
         """
-        self.methods = {}
-        method_dir = "method"
-        for category in os.listdir(method_dir):
-            category_path = os.path.join(method_dir, category)
-            if os.path.isdir(category_path):
-                category_item = QTreeWidgetItem([category])
-                self.algorithm_tree.addTopLevelItem(category_item)
+        method_dir = os.path.join(os.getcwd(), 'method')
+        if not os.path.exists(method_dir):
+            self.status_label.setText(f"算法目录 {method_dir} 不存在")
+            return
 
-                for algorithm in os.listdir(category_path):
-                    if algorithm.endswith(".py"):
-                        algorithm_name = os.path.splitext(algorithm)[0]
-                        algorithm_path = os.path.join(category_path, algorithm)
-                        self.methods[algorithm_name] = algorithm_path
+        # 遍历文件目录
+        for root, dirs, files in os.walk(method_dir):
+            relative_path = os.path.relpath(root, method_dir)
+            if relative_path == '.':
+                # 如果是顶层目录，则将子节点挂载到根
+                parent_item = self.algorithm_tree
+            else:
+                # 查找父节点
+                parent_item = self.find_tree_item(relative_path)
 
-                        algorithm_item = QTreeWidgetItem([algorithm_name])
-                        category_item.addChild(algorithm_item)
+            if parent_item is None:
+                continue
+
+            # 添加子目录
+            for dir_name in dirs:
+                dir_item = QTreeWidgetItem(parent_item, [dir_name])
+                dir_item.setData(0, Qt.UserRole, os.path.join(relative_path, dir_name))
+
+            # 添加算法文件
+            for file_name in files:
+                if file_name.endswith('.py'):
+                    algorithm_name = os.path.splitext(file_name)[0]
+                    file_item = QTreeWidgetItem(parent_item, [algorithm_name])
+                    file_item.setData(0, Qt.UserRole, os.path.join(relative_path, file_name))
+
+    def find_tree_item(self, path):
+        """
+        根据相对路径在树中查找对应的 QTreeWidgetItem
+        """
+        parts = path.split(os.sep)
+        parent = self.algorithm_tree.invisibleRootItem()  # 从根节点开始查找
+        for part in parts:
+            found = False
+            for i in range(parent.childCount()):  # 遍历子节点
+                item = parent.child(i)
+                if item.text(0) == part:  # 匹配节点名称
+                    parent = item
+                    found = True
+                    break
+            if not found:
+                return None
+        return parent
+
+
+    def on_algorithm_selected(self, item, column):
+        """
+        当用户在树中选择算法时，更新参数设置界面
+        """
+        algorithm_path = item.data(0, Qt.UserRole)
+        if algorithm_path and algorithm_path.endswith('.py'):
+            # 保存当前选中的算法信息
+            self.current_algorithm = algorithm_path.replace('\\', '/')
+            # 动态加载算法模块
+            module_name = self.current_algorithm.replace('/', '.').replace('.py', '')
+            try:
+                if module_name in sys.modules:
+                    del sys.modules[module_name]
+                self.current_algorithm_module = importlib.import_module(module_name)
+                self.status_label.setText(f"已选择算法：{item.text(0)}")
+                # 动态生成参数界面
+                self.generate_parameter_ui()
+            except Exception as e:
+                self.status_label.setText(f"加载算法失败：{e}")
+        else:
+            self.current_algorithm = None
+            self.current_algorithm_module = None
+            self.parameter_layout = QVBoxLayout()
+            self.parameter_widget.setLayout(self.parameter_layout)
+            self.status_label.setText("请选择具体的算法")
+
+    def generate_parameter_ui(self):
+        """
+        根据算法模块的需要，动态生成参数输入界面
+        """
+        # 清空参数布局
+        for i in reversed(range(self.parameter_layout.count())):
+            widget = self.parameter_layout.itemAt(i).widget()
+            if widget is not None:
+                widget.setParent(None)
+
+        # 检查算法模块是否有自定义的参数界面生成函数
+        if hasattr(self.current_algorithm_module, 'setup_ui'):
+            self.current_algorithm_module.setup_ui(self.parameter_layout, self.data)
+        else:
+            # 默认提示
+            label = QLabel("该算法未提供参数设置界面")
+            self.parameter_layout.addWidget(label)
 
     def update_columns(self, data):
         """
-        更新列选择框，显示数据的列名
+        更新数据，在参数界面中需要使用
         """
         self.data = data
-        self.all_columns_list.clear()
-        self.selected_columns_list.clear()
-        if data is not None:
-            for column in data.columns:
-                item = QListWidgetItem(column)
-                self.all_columns_list.addItem(item)
-
-    def display_algorithm_config(self, item):
-        """
-        根据选择的算法显示对应的参数输入界面
-        """
-        algorithm_name = item.text(0)
-        if algorithm_name in self.methods:
-            module_path = self.methods[algorithm_name].replace("/", ".").replace("\\", ".").rstrip(".py")
-            module = importlib.import_module(module_path)
-
-            # 动态加载算法的自定义界面
-            self.param_input_area.clear()
-            if hasattr(module, "get_config_ui"):
-                config_widget = module.get_config_ui()
-                self.param_input_area.addWidget(config_widget)
-                self.param_input_area.setCurrentWidget(config_widget)
-            else:
-                self.param_input_area.addWidget(QLabel("该算法没有自定义配置界面"))
-            self.status_label.setText(f"已选择算法：{algorithm_name}")
-        else:
-            self.status_label.setText("请选择有效的算法")
+        # 如果已经选择了算法，重新生成参数界面，以便参数界面可以获取最新的数据列名
+        if self.current_algorithm_module is not None:
+            self.generate_parameter_ui()
 
     def run_analysis(self):
         """
-        运行选中的算法
+        执行选中的算法
         """
-        current_widget = self.param_input_area.currentWidget()
-        if current_widget and hasattr(current_widget, "collect_params"):
-            params = current_widget.collect_params()
-            self.status_label.setText(f"运行算法，参数：{params}")
+        if self.current_algorithm_module is None:
+            self.status_label.setText("请先选择算法")
+            return
+
+        # 从参数界面获取参数
+        if hasattr(self.current_algorithm_module, 'get_params'):
+            params = self.current_algorithm_module.get_params()
         else:
-            self.status_label.setText("没有可用的参数配置")
+            params = {}
+
+        # 传入数据和参数执行算法
+        try:
+            self.current_algorithm_module.run(self.data, **params)
+            self.status_label.setText("算法执行成功")
+        except Exception as e:
+            self.status_label.setText(f"算法执行失败：{e}")
