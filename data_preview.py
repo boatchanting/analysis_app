@@ -28,9 +28,9 @@ class DataPreview(QWidget):
             self.data = data
             model = PandasTableModel(data)
             self.table_view.setModel(model)
-            self.status_label.setText("数据预览更新成功")
+            self.status_label.setText("数据加载成功")
         else:
-            self.status_label.setText("数据预览失败: 数据为空")
+            self.status_label.setText("请导入数据")
 
 class PandasTableModel(QAbstractTableModel):
     def __init__(self, data):
