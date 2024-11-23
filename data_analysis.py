@@ -1,19 +1,31 @@
+import os
+import json
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QPushButton, QTreeWidget, QTreeWidgetItem,
-    QStackedWidget, QListWidget, QHBoxLayout, QListWidgetItem, QColorDialog,
-    QLineEdit, QCheckBox, QSpinBox, QFileDialog
+    QHBoxLayout, QComboBox, QLineEdit, QListWidget, QCheckBox, QColorDialog, QSpinBox
 )
 from PyQt5.QtCore import Qt
 import importlib
-import os
-import sys
-import random
+
 
 class DataAnalysis(QWidget):
     def __init__(self):
         super().__init__()
         self.init_ui()
         self.data = None  # 用于存储当前加载的数据
+        self.current_algorithm = None
+        self.current_parameters = {}
+        self.parameter_widgets = {}  # 保存参数控件，方便获取值
+
+    def update_columns(self, data):
+        """
+        更新数据列名，在参数界面需要时使用
+        :param data: 当前加载的数据 (Pandas DataFrame)
+        """
+        self.data = data
+        # 如果当前已有选中的算法，重新生成参数界面
+        if self.current_algorithm:
+            self.load_algorithm_parameters()
 
     def init_ui(self):
         main_layout = QHBoxLayout()
@@ -50,28 +62,18 @@ class DataAnalysis(QWidget):
         main_layout.addLayout(self.right_layout, 2)
         self.setLayout(main_layout)
 
-        # 保存当前选中的算法信息
-        self.current_algorithm = None
-        self.current_algorithm_module = None
-
     def load_algorithms(self):
         """
-        加载 method/ 目录下的算法，并构建树状结构
+        加载 method/ 目录下的 JSON 配置文件，并构建树状结构
         """
         method_dir = os.path.join(os.getcwd(), 'method')
         if not os.path.exists(method_dir):
             self.status_label.setText(f"算法目录 {method_dir} 不存在")
             return
 
-        # 遍历文件目录
         for root, dirs, files in os.walk(method_dir):
             relative_path = os.path.relpath(root, method_dir)
-            if relative_path == '.':
-                # 如果是顶层目录，则将子节点挂载到根
-                parent_item = self.algorithm_tree
-            else:
-                # 查找父节点
-                parent_item = self.find_tree_item(relative_path)
+            parent_item = self.algorithm_tree.invisibleRootItem() if relative_path == '.' else self.find_tree_item(relative_path)
 
             if parent_item is None:
                 continue
@@ -81,9 +83,9 @@ class DataAnalysis(QWidget):
                 dir_item = QTreeWidgetItem(parent_item, [dir_name])
                 dir_item.setData(0, Qt.UserRole, os.path.join(relative_path, dir_name))
 
-            # 添加算法文件
+            # 添加 JSON 文件
             for file_name in files:
-                if file_name.endswith('.py'):
+                if file_name.endswith('.json'):
                     algorithm_name = os.path.splitext(file_name)[0]
                     file_item = QTreeWidgetItem(parent_item, [algorithm_name])
                     file_item.setData(0, Qt.UserRole, os.path.join(relative_path, file_name))
@@ -93,12 +95,12 @@ class DataAnalysis(QWidget):
         根据相对路径在树中查找对应的 QTreeWidgetItem
         """
         parts = path.split(os.sep)
-        parent = self.algorithm_tree.invisibleRootItem()  # 从根节点开始查找
+        parent = self.algorithm_tree.invisibleRootItem()
         for part in parts:
             found = False
-            for i in range(parent.childCount()):  # 遍历子节点
+            for i in range(parent.childCount()):
                 item = parent.child(i)
-                if item.text(0) == part:  # 匹配节点名称
+                if item.text(0) == part:
                     parent = item
                     found = True
                     break
@@ -106,77 +108,122 @@ class DataAnalysis(QWidget):
                 return None
         return parent
 
-
     def on_algorithm_selected(self, item, column):
         """
         当用户在树中选择算法时，更新参数设置界面
         """
         algorithm_path = item.data(0, Qt.UserRole)
-        if algorithm_path and algorithm_path.endswith('.py'):
-            # 保存当前选中的算法信息
-            self.current_algorithm = algorithm_path.replace('\\', '/')
-            # 动态加载算法模块
-            module_name = self.current_algorithm.replace('/', '.').replace('.py', '')
-            try:
-                if module_name in sys.modules:
-                    del sys.modules[module_name]
-                self.current_algorithm_module = importlib.import_module(module_name)
-                self.status_label.setText(f"已选择算法：{item.text(0)}")
-                # 动态生成参数界面
-                self.generate_parameter_ui()
-            except Exception as e:
-                self.status_label.setText(f"加载算法失败：{e}")
-        else:
-            self.current_algorithm = None
-            self.current_algorithm_module = None
-            self.parameter_layout = QVBoxLayout()
-            self.parameter_widget.setLayout(self.parameter_layout)
-            self.status_label.setText("请选择具体的算法")
+        if algorithm_path and algorithm_path.endswith('.json'):
+            self.current_algorithm = os.path.join('method', algorithm_path)
+            self.load_algorithm_parameters()
 
-    def generate_parameter_ui(self):
+    def load_algorithm_parameters(self):
         """
-        根据算法模块的需要，动态生成参数输入界面
+        加载选中算法的 JSON 配置并生成参数设置界面
         """
         # 清空参数布局
-        for i in reversed(range(self.parameter_layout.count())):
-            widget = self.parameter_layout.itemAt(i).widget()
-            if widget is not None:
-                widget.setParent(None)
+        self.clear_layout(self.parameter_layout)
+        self.parameter_widgets.clear()
 
-        # 检查算法模块是否有自定义的参数界面生成函数
-        if hasattr(self.current_algorithm_module, 'setup_ui'):
-            self.current_algorithm_module.setup_ui(self.parameter_layout, self.data)
-        else:
-            # 默认提示
-            label = QLabel("该算法未提供参数设置界面")
-            self.parameter_layout.addWidget(label)
+        try:
+            with open(self.current_algorithm, 'r', encoding='utf-8') as f:
+                config = json.load(f)
 
-    def update_columns(self, data):
+            self.current_parameters = config.get('parameters', [])
+            self.status_label.setText(f"已加载算法：{config.get('name')}")
+
+            for param in self.current_parameters:
+                label = QLabel(param['name'])
+                self.parameter_layout.addWidget(label)
+
+                if param['type'] == 'column_select':
+                    widget = QComboBox()
+                    if self.data is not None:
+                        widget.addItems(self.data.columns)
+                    self.parameter_widgets[param['name']] = widget
+                elif param['type'] == 'multi_column_select':
+                    widget = QListWidget()
+                    widget.setSelectionMode(QListWidget.MultiSelection)
+                    if self.data is not None:
+                        widget.addItems(self.data.columns)
+                    self.parameter_widgets[param['name']] = widget
+                elif param['type'] == 'color':
+                    widget = QPushButton("选择颜色")
+                    widget.clicked.connect(self.select_color)
+                    widget.setStyleSheet(f"background-color: {param.get('default', '#FFFFFF')}")
+                    self.parameter_widgets[param['name']] = widget
+                elif param['type'] == 'boolean':
+                    widget = QCheckBox()
+                    widget.setChecked(param.get('default', False))
+                    self.parameter_widgets[param['name']] = widget
+                elif param['type'] == 'number':
+                    widget = QSpinBox()
+                    widget.setRange(*param.get('range', [0, 100]))
+                    widget.setValue(param.get('default', 0))
+                    self.parameter_widgets[param['name']] = widget
+                elif param['type'] == 'text':
+                    widget = QLineEdit()
+                    widget.setText(param.get('default', ''))
+                    self.parameter_widgets[param['name']] = widget
+                else:
+                    widget = QLabel("未知参数类型")
+                self.parameter_layout.addWidget(widget)
+
+        except Exception as e:
+            self.status_label.setText(f"加载参数失败：{e}")
+
+    def select_color(self):
         """
-        更新数据，在参数界面中需要使用
+        打开颜色选择器
         """
-        self.data = data
-        # 如果已经选择了算法，重新生成参数界面，以便参数界面可以获取最新的数据列名
-        if self.current_algorithm_module is not None:
-            self.generate_parameter_ui()
+        button = self.sender()
+        color = QColorDialog.getColor()
+        if color.isValid():
+            button.setStyleSheet(f"background-color: {color.name()}")
 
     def run_analysis(self):
         """
         执行选中的算法
         """
-        if self.current_algorithm_module is None:
+        if not self.current_algorithm:
             self.status_label.setText("请先选择算法")
             return
 
-        # 从参数界面获取参数
-        if hasattr(self.current_algorithm_module, 'get_params'):
-            params = self.current_algorithm_module.get_params()
-        else:
-            params = {}
+        # 收集用户输入的参数
+        params = {}
+        for name, widget in self.parameter_widgets.items():
+            if isinstance(widget, QComboBox):
+                params[name] = widget.currentText()
+            elif isinstance(widget, QListWidget):
+                params[name] = [item.text() for item in widget.selectedItems()]
+            elif isinstance(widget, QPushButton):
+                params[name] = widget.styleSheet().split("background-color: ")[-1].strip(";")
+            elif isinstance(widget, QCheckBox):
+                params[name] = widget.isChecked()
+            elif isinstance(widget, QSpinBox):
+                params[name] = widget.value()
+            elif isinstance(widget, QLineEdit):
+                params[name] = widget.text()
 
-        # 传入数据和参数执行算法
+        # 动态加载对应的算法实现
+        algorithm_name = os.path.splitext(os.path.basename(self.current_algorithm))[0]
         try:
-            self.current_algorithm_module.run(self.data, **params)
-            self.status_label.setText("算法执行成功")
+            module = importlib.import_module(f"method.{algorithm_name}")
+            module.run(self.data, **params)
+            self.status_label.setText(f"算法 {algorithm_name} 执行成功")
         except Exception as e:
             self.status_label.setText(f"算法执行失败：{e}")
+
+    @staticmethod
+    def clear_layout(layout):
+        """
+        清除布局中的所有控件
+        """
+        if layout is not None:
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+                elif item.layout() is not None:
+                    DataAnalysis.clear_layout(item.layout())
