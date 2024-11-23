@@ -36,13 +36,16 @@ class DataLoader(QWidget):
             raw_data = f.read(sample_size)
         result = chardet.detect(raw_data)
         return result['encoding']
-
+    
     def load_data(self):
         """
         加载数据文件，并通过信号发送加载结果
         """
+        # 设置默认文件路径
+        default_path = ".\\example\\example.xlsx"
+
         file_path, _ = QFileDialog.getOpenFileName(
-            self, "选择数据文件", "", "数据文件 (*.csv *.xlsx *.xls *.txt)"
+            self, "选择数据文件", default_path, "数据文件 (*.csv *.xlsx *.xls *.txt)"
         )
         if file_path:
             try:
