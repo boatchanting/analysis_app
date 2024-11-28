@@ -2,7 +2,7 @@ import os
 import json
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QPushButton, QTreeWidget, QTreeWidgetItem,
-    QHBoxLayout, QComboBox, QLineEdit, QListWidget, QCheckBox, QColorDialog, QSpinBox
+    QHBoxLayout, QComboBox, QLineEdit, QListWidget, QCheckBox, QColorDialog, QSpinBox, QSplitter
 )
 from PyQt5.QtCore import Qt
 import importlib
@@ -28,7 +28,8 @@ class DataAnalysis(QWidget):
             self.load_algorithm_parameters()
 
     def init_ui(self):
-        main_layout = QHBoxLayout()
+        # 主布局使用 QSplitter
+        main_splitter = QSplitter(Qt.Horizontal)
 
         # 左侧：算法树状选择控件
         self.algorithm_tree = QTreeWidget()
@@ -36,10 +37,11 @@ class DataAnalysis(QWidget):
         self.load_algorithms()
         self.algorithm_tree.itemClicked.connect(self.on_algorithm_selected)
 
-        # 右侧：参数设置和执行区域
-        self.right_layout = QVBoxLayout()
+        # 设置算法树控件初始宽度占比为 30%
+        main_splitter.addWidget(self.algorithm_tree)
+        main_splitter.setStretchFactor(0, 1)  # 设置左侧为固定占比
 
-        # 参数设置区域（动态变化）
+        # 右侧：参数设置和执行区域
         self.parameter_widget = QWidget()
         self.parameter_layout = QVBoxLayout()
         self.parameter_widget.setLayout(self.parameter_layout)
@@ -51,15 +53,22 @@ class DataAnalysis(QWidget):
         # 状态标签
         self.status_label = QLabel("请选择算法并设置参数")
 
-        # 将控件添加到右侧布局
-        self.right_layout.addWidget(self.parameter_widget)
-        self.right_layout.addWidget(self.run_button)
-        self.right_layout.addWidget(self.status_label)
-        self.right_layout.addStretch()
+        # 右侧布局
+        right_layout = QVBoxLayout()
+        right_layout.addWidget(self.parameter_widget)
+        right_layout.addWidget(self.run_button)
+        right_layout.addWidget(self.status_label)
+        right_layout.addStretch()
 
-        # 添加左右布局
-        main_layout.addWidget(self.algorithm_tree, 1)
-        main_layout.addLayout(self.right_layout, 2)
+        right_widget = QWidget()
+        right_widget.setLayout(right_layout)
+
+        main_splitter.addWidget(right_widget)
+        main_splitter.setStretchFactor(1, 2)  # 设置右侧为可扩展区域
+
+        # 主布局
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(main_splitter)
         self.setLayout(main_layout)
 
     def load_algorithms(self):
@@ -189,28 +198,63 @@ class DataAnalysis(QWidget):
             self.status_label.setText("请先选择算法")
             return
 
+        # 获取当前选中的算法配置文件路径
+        algorithm_json_path = self.current_algorithm
+        algorithm_dir = os.path.dirname(algorithm_json_path)
+        
+        # 读取 JSON 配置文件
+        try:
+            with open(algorithm_json_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+        except Exception as e:
+            self.status_label.setText(f"读取配置文件失败：{e}")
+            return
+        
+        # 获取算法脚本路径 (脚本与配置文件同名，只是扩展名不同)
+        algorithm_script_path = os.path.join(algorithm_dir, config['algorithm'] + '.py')
+        
+        # 确保脚本文件存在
+        if not os.path.exists(algorithm_script_path):
+            self.status_label.setText(f"算法脚本 {algorithm_script_path} 不存在")
+            return
+
         # 收集用户输入的参数
         params = {}
-        for name, widget in self.parameter_widgets.items():
-            if isinstance(widget, QComboBox):
-                params[name] = widget.currentText()
-            elif isinstance(widget, QListWidget):
-                params[name] = [item.text() for item in widget.selectedItems()]
-            elif isinstance(widget, QPushButton):
-                params[name] = widget.styleSheet().split("background-color: ")[-1].strip(";")
-            elif isinstance(widget, QCheckBox):
-                params[name] = widget.isChecked()
-            elif isinstance(widget, QSpinBox):
-                params[name] = widget.value()
-            elif isinstance(widget, QLineEdit):
-                params[name] = widget.text()
+        for param in config["parameters"]:
+            param_name = param["name"]
+            param_type = param["type"]
+            # 根据不同参数类型，收集界面上的输入
+            widget = self.parameter_widgets.get(param_name)
+            
+            if widget:
+                if isinstance(widget, QComboBox):
+                    params[param_name] = widget.currentText()
+                elif isinstance(widget, QLineEdit):
+                    params[param_name] = widget.text()
+                elif isinstance(widget, QSpinBox):
+                    params[param_name] = widget.value()
+                elif isinstance(widget, QCheckBox):
+                    params[param_name] = widget.isChecked()
+                elif isinstance(widget, QListWidget):
+                    params[param_name] = [item.text() for item in widget.selectedItems()]
+                elif isinstance(widget, QPushButton):
+                    params[param_name] = widget.styleSheet().split("background-color: ")[-1].strip(";")
+            else:
+                params[param_name] = param.get('default')  # 如果没有用户输入，使用默认值
 
         # 动态加载对应的算法实现
-        algorithm_name = os.path.splitext(os.path.basename(self.current_algorithm))[0]
         try:
-            module = importlib.import_module(f"method.{algorithm_name}")
-            module.run(self.data, **params)
-            self.status_label.setText(f"算法 {algorithm_name} 执行成功")
+            spec = importlib.util.spec_from_file_location("line_chart_algorithm", algorithm_script_path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            
+            # 模块中的函数名为run，调用该函数并传递参数
+            if hasattr(module, 'run'):
+                # 调用算法并传递参数
+                module.run(self.data, **params)
+                self.status_label.setText(f"算法 {config['algorithm']} 执行成功")
+            else:
+                self.status_label.setText(f"算法脚本中没有找到 run 函数")
         except Exception as e:
             self.status_label.setText(f"算法执行失败：{e}")
 
