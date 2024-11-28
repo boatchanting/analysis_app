@@ -145,38 +145,86 @@ class DataAnalysis(QWidget):
             self.status_label.setText(f"已加载算法：{config.get('name')}")
 
             for param in self.current_parameters:
+                """
+                这里写入的代码会根据参数类型创建相应的控件，并将其添加到参数设置界面中
+                """
                 label = QLabel(param['name'])
                 self.parameter_layout.addWidget(label)
-
                 if param['type'] == 'column_select':
+                    """
+                    下拉框控件:
+                    json配置示例
+                    {
+                        "name": "数据列",
+                        "type": "column_select",
+                        "function": "column",
+                        "required": true,
+                        "description": "请选择要绘制的列"
+                    }
+                    """
                     widget = QComboBox()
                     if self.data is not None:
                         widget.addItems(self.data.columns)
-                    self.parameter_widgets[param['name']] = widget
+                    self.parameter_widgets[param['name']] = widget                    
                 elif param['type'] == 'multi_column_select':
+                    """
+                    多选下拉框控件:
+                    json配置示例
+                    {
+                        "name": "数据列",
+                        "type": "multi_column_select",
+                        "function": "column",
+                        "required": true,
+                        "description": "请选择要绘制的列"
+                    }
+                    """
                     widget = QListWidget()
                     widget.setSelectionMode(QListWidget.MultiSelection)
                     if self.data is not None:
                         widget.addItems(self.data.columns)
                     self.parameter_widgets[param['name']] = widget
                 elif param['type'] == 'color':
+                    """
+                    颜色选择控件:
+                    json配置示例
+                    {
+                        "name": "颜色",
+                        "type": "color",
+                        "function": "color",
+                        "required": true,
+                        "description": "请选择颜色"
+                    }
+                    """
                     widget = QPushButton("选择颜色")
                     widget.clicked.connect(self.select_color)
                     widget.setStyleSheet(f"background-color: {param.get('default', '#FFFFFF')}")
                     self.parameter_widgets[param['name']] = widget
                 elif param['type'] == 'boolean':
+                    """
+                    复选框控件:
+                    json配置示例
+                    {
+                        "name": "是否显示图例",
+                        "type": "boolean",
+                        "function": "legend",
+                        "required": false,
+                        "default": true,
+                        "description": "是否显示图例"
+                    }
+                    """
                     widget = QCheckBox()
                     widget.setChecked(param.get('default', False))
                     self.parameter_widgets[param['name']] = widget
-                elif param['type'] == 'number':
+                elif param['type'] == 'number': # 滑动条控件
                     widget = QSpinBox()
                     widget.setRange(*param.get('range', [0, 100]))
                     widget.setValue(param.get('default', 0))
                     self.parameter_widgets[param['name']] = widget
-                elif param['type'] == 'text':
+                elif param['type'] == 'text': # 文本框控件
                     widget = QLineEdit()
                     widget.setText(param.get('default', ''))
                     self.parameter_widgets[param['name']] = widget
+                
                 else:
                     widget = QLabel("未知参数类型")
                 self.parameter_layout.addWidget(widget)
