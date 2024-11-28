@@ -7,7 +7,6 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 import importlib
 
-
 class DataAnalysis(QWidget):
     def __init__(self):
         super().__init__()
@@ -252,7 +251,6 @@ class DataAnalysis(QWidget):
             self.status_label.setText(f"算法 {config['algorithm']} 执行成功")
         except Exception as e:
             self.status_label.setText(f"算法执行失败：{e}")
-
 
     @staticmethod
     def clear_layout(layout):
