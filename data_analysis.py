@@ -218,45 +218,37 @@ class DataAnalysis(QWidget):
             self.status_label.setText(f"算法脚本 {algorithm_script_path} 不存在")
             return
 
-        # 收集用户输入的参数
+        # 收集用户输入的参数，并映射到 run 函数的参数名称
         params = {}
         for param in config["parameters"]:
             param_name = param["name"]
-            param_type = param["type"]
-            # 根据不同参数类型，收集界面上的输入
+            param_function = param["function"]  # 从配置文件获取函数名
             widget = self.parameter_widgets.get(param_name)
-            
+
             if widget:
                 if isinstance(widget, QComboBox):
-                    params[param_name] = widget.currentText()
+                    params[param_function] = widget.currentText()
                 elif isinstance(widget, QLineEdit):
-                    params[param_name] = widget.text()
+                    params[param_function] = widget.text()
                 elif isinstance(widget, QSpinBox):
-                    params[param_name] = widget.value()
+                    params[param_function] = widget.value()
                 elif isinstance(widget, QCheckBox):
-                    params[param_name] = widget.isChecked()
+                    params[param_function] = widget.isChecked()
                 elif isinstance(widget, QListWidget):
-                    params[param_name] = [item.text() for item in widget.selectedItems()]
-                elif isinstance(widget, QPushButton):
-                    params[param_name] = widget.styleSheet().split("background-color: ")[-1].strip(";")
-            else:
-                params[param_name] = param.get('default')  # 如果没有用户输入，使用默认值
+                    params[param_function] = [item.text() for item in widget.selectedItems()]
 
-        # 动态加载对应的算法实现
+        # 动态加载算法脚本
         try:
-            spec = importlib.util.spec_from_file_location("line_chart_algorithm", algorithm_script_path)
+            spec = importlib.util.spec_from_file_location(config['algorithm'], algorithm_script_path)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            
-            # 模块中的函数名为run，调用该函数并传递参数
-            if hasattr(module, 'run'):
-                # 调用算法并传递参数
-                module.run(self.data, **params)
-                self.status_label.setText(f"算法 {config['algorithm']} 执行成功")
-            else:
-                self.status_label.setText(f"算法脚本中没有找到 run 函数")
+
+            # 调用算法的 run 函数并传递参数
+            module.run(self.data, **params)
+            self.status_label.setText(f"算法 {config['algorithm']} 执行成功")
         except Exception as e:
             self.status_label.setText(f"算法执行失败：{e}")
+
 
     @staticmethod
     def clear_layout(layout):
