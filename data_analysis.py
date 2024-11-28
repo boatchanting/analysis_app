@@ -187,13 +187,6 @@ class DataAnalysis(QWidget):
                     """
                     颜色选择控件:
                     json配置示例
-                    {
-                        "name": "颜色",
-                        "type": "color",
-                        "function": "color",
-                        "required": true,
-                        "description": "请选择颜色"
-                    }
                     """
                     widget = QPushButton("选择颜色")
                     widget.clicked.connect(self.select_color)
@@ -215,12 +208,20 @@ class DataAnalysis(QWidget):
                     widget = QCheckBox()
                     widget.setChecked(param.get('default', False))
                     self.parameter_widgets[param['name']] = widget
-                elif param['type'] == 'number': # 滑动条控件
+                elif param['type'] == 'number':
+                    """
+                    数字输入框控件:
+                    json配置示例
+                    """
                     widget = QSpinBox()
                     widget.setRange(*param.get('range', [0, 100]))
                     widget.setValue(param.get('default', 0))
                     self.parameter_widgets[param['name']] = widget
                 elif param['type'] == 'text': # 文本框控件
+                    """
+                    文本输入框控件:
+                    json配置示例
+                    """
                     widget = QLineEdit()
                     widget.setText(param.get('default', ''))
                     self.parameter_widgets[param['name']] = widget
