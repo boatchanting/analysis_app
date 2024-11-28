@@ -1,0 +1,34 @@
+{
+  "algorithm": "折线图（1列）",
+  "description": "绘制单列数据的折线图",
+  "parameters": [
+    {
+      "name": "数据列",
+      "type": "column_select",
+      "function": "column",
+      "required": true,
+      "description": "请选择要绘制的列"
+    },
+    {
+      "name": "线颜色",
+      "type": "color",
+      "function": "color",
+      "default": "#0000FF",
+      "description": "设置折线颜色"
+    },
+    {
+      "name": "线型",
+      "type": "text",
+      "function": "linestyle",
+      "default": "-",
+      "description": "设置折线线型"
+    },
+    {
+      "name": "图表标题",
+      "type": "text",
+      "function": "title",
+      "default": "折线图",
+      "description": "设置图表标题"
+    }
+  ]
+}
