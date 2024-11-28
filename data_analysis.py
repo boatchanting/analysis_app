@@ -81,6 +81,10 @@ class DataAnalysis(QWidget):
             return
 
         for root, dirs, files in os.walk(method_dir):
+            # 排除 __pycache__ 文件夹
+            if '__pycache__' in dirs:
+                dirs.remove('__pycache__')
+
             relative_path = os.path.relpath(root, method_dir)
             parent_item = self.algorithm_tree.invisibleRootItem() if relative_path == '.' else self.find_tree_item(relative_path)
 
