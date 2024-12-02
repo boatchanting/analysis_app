@@ -11,11 +11,12 @@ QWidget {
 QPushButton {
     background-color: #81D4FA;
     border: 2px solid #81D4FA;
-    border-radius: 12px;
+    border-radius: 20px;
     font-size: 14pt; 
     padding: 10px;
     color: white;
     text-align: center;
+    min-height: 80%;
 }
 
 QPushButton:hover {
@@ -30,9 +31,7 @@ QLabel {
     padding: 10px;
     text-align: center;
     margin-top: 20px;
+    min-height: 10%;
 }
 
-/* 文件加载框占据页面高度的80% */
-#load_button {
-    flex: 1;
-}
+
