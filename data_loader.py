@@ -16,10 +16,33 @@ class DataLoader(QWidget):
 
         # 文件选择按钮
         self.load_button = QPushButton("点我选择文件进行加载或者直接拖动数据文件到此窗格")
+        self.load_button.setStyleSheet("""
+            QPushButton {
+                background-color: #81D4FA;
+                border: 2px solid #81D4FA;
+                border-radius: 12px;
+                font-size: 18px;
+                padding: 10px;
+                color: white;
+                text-align: center;
+            }
+            QPushButton:hover {
+                background-color: #4FC3F7;
+                border-color: #4FC3F7;
+            }
+        """)
         self.load_button.clicked.connect(self.load_data)
 
         # 状态标签
         self.status_label = QLabel("请选择文件进行加载或者直接拖动数据进入窗格")
+        self.status_label.setStyleSheet("""
+            QLabel {
+                font-size: 18px;
+                color: #01579B;
+                padding: 10px;
+                text-align: center;
+            }
+        """)
 
         layout.addWidget(self.load_button)
         layout.addWidget(self.status_label)
@@ -27,6 +50,15 @@ class DataLoader(QWidget):
 
         # 启用拖放功能
         self.setAcceptDrops(True)
+
+        # 设置窗口样式
+        self.setStyleSheet("""
+            QWidget {
+                background: qlineargradient(90deg, #B2EBF2 0%, #81D4FA 100%);
+                font-size: 20px;
+                border-radius: 15px;
+            }
+        """)
 
     def detect_encoding(self, file_path, sample_size=1024):
         """
