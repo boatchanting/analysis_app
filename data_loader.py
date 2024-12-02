@@ -2,6 +2,7 @@ import pandas as pd
 import chardet
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QFileDialog, QLabel
 from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtGui import QGuiApplication
 
 class DataLoader(QWidget):
     # 定义信号
@@ -12,53 +13,49 @@ class DataLoader(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        layout = QVBoxLayout()
+        self.load_stylesheet("styles/data_loader.qss") # 加载样式表
+        layout = QVBoxLayout(self) # 创建垂直布局
 
         # 文件选择按钮
         self.load_button = QPushButton("点我选择文件进行加载或者直接拖动数据文件到此窗格")
-        self.load_button.setStyleSheet("""
-            QPushButton {
-                background-color: #81D4FA;
-                border: 2px solid #81D4FA;
-                border-radius: 12px;
-                font-size: 18px;
-                padding: 10px;
-                color: white;
-                text-align: center;
-            }
-            QPushButton:hover {
-                background-color: #4FC3F7;
-                border-color: #4FC3F7;
-            }
-        """)
+        self.load_button.setObjectName("load_button")  # 设置对象名，方便QSS选择
         self.load_button.clicked.connect(self.load_data)
 
         # 状态标签
         self.status_label = QLabel("请选择文件进行加载或者直接拖动数据进入窗格")
-        self.status_label.setStyleSheet("""
-            QLabel {
-                font-size: 18px;
-                color: #01579B;
-                padding: 10px;
-                text-align: center;
-            }
-        """)
+        self.status_label.setObjectName("status_label")  # 设置对象名，方便QSS选择
 
         layout.addWidget(self.load_button)
         layout.addWidget(self.status_label)
+        layout.setStretch(0, 7)  # 设置按钮占据 70% 的高度
+        layout.setStretch(7, 8)  # 设置状态标签占据 30% 的高度
+
         self.setLayout(layout)
 
         # 启用拖放功能
         self.setAcceptDrops(True)
 
-        # 设置窗口样式
-        self.setStyleSheet("""
-            QWidget {
-                background: qlineargradient(90deg, #B2EBF2 0%, #81D4FA 100%);
-                font-size: 20px;
-                border-radius: 15px;
-            }
-        """)
+    def set_window_size(self):
+        # 获取屏幕尺寸
+        screen = QGuiApplication.primaryScreen()
+        screen_geometry = screen.availableGeometry()
+        screen_width = screen_geometry.width()
+        screen_height = screen_geometry.height()
+
+        # 计算全屏的80%大小
+        width = int(screen_width * 0.8)
+        height = int(screen_height * 0.8)
+
+        # 设置窗口大小
+        self.setGeometry(100, 100, width, height)
+    
+    def load_stylesheet(self, path):
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                stylesheet = f.read()
+            self.setStyleSheet(stylesheet)
+        except Exception as e:
+            print(f"读取样式表失败: {e}")
 
     def detect_encoding(self, file_path, sample_size=1024):
         """
@@ -91,7 +88,7 @@ class DataLoader(QWidget):
                 if file_path.endswith('.csv'):
                     df = pd.read_csv(file_path, encoding=encoding)
                 elif file_path.endswith('.xlsx') or file_path.endswith('.xls'):
-                    df = pd.read_excel(file_path, encoding=encoding)
+                    df = pd.read_excel(file_path) # 这里一定不要加encoding参数，否则会报错!
                 elif file_path.endswith('.txt'):
                     df = pd.read_table(file_path, encoding=encoding)
                 else:
@@ -126,7 +123,7 @@ class DataLoader(QWidget):
                 if file_path.endswith('.csv'):
                     df = pd.read_csv(file_path, encoding=encoding)
                 elif file_path.endswith('.xlsx') or file_path.endswith('.xls'):
-                    df = pd.read_excel(file_path, encoding=encoding)
+                    df = pd.read_excel(file_path) # 这里一定不要加encoding参数，否则会报错!
                 elif file_path.endswith('.txt'):
                     df = pd.read_table(file_path, encoding=encoding)
                 else:
@@ -137,3 +134,5 @@ class DataLoader(QWidget):
                 self.status_label.setText(f"数据加载成功：{file_path}")
             except Exception as e:
                 self.status_label.setText(f"加载数据失败: {e}")
+    
+
