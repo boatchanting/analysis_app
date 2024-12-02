@@ -17,7 +17,7 @@ class DataLoader(QWidget):
         layout = QVBoxLayout(self) # 创建垂直布局
 
         # 文件选择按钮
-        self.load_button = QPushButton("点我选择文件进行加载或者直接拖动数据文件到此窗格")
+        self.load_button = QPushButton("点我选择文件进行加载")
         self.load_button.setObjectName("load_button")  # 设置对象名，方便QSS选择
         self.load_button.clicked.connect(self.load_data)
 
