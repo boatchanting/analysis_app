@@ -1,6 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QTabWidget
 from PyQt5.QtGui import QGuiApplication
+from PyQt5.QtCore import QFile, QTextStream
 from data_loader import DataLoader
 from data_preview import DataPreview
 from data_analysis import DataAnalysis
@@ -8,6 +9,7 @@ from data_analysis import DataAnalysis
 class MainApp(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.load_stylesheet()
         self.setWindowTitle("数据分析软件")
         # 获取屏幕尺寸
         screen = QGuiApplication.primaryScreen()
@@ -23,6 +25,14 @@ class MainApp(QMainWindow):
         self.setGeometry(100, 100, width, height)
         # 初始化界面布局
         self.init_ui()
+    
+    def load_stylesheet(self):
+        # 读取 QSS 文件并应用样式
+        file = QFile("styles/main.qss")
+        if file.open(QFile.ReadOnly | QFile.Text):
+            stream = QTextStream(file)
+            self.setStyleSheet(stream.readAll())
+            file.close()
 
     def init_ui(self):
         # 主窗口的中心组件
