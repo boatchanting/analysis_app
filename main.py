@@ -9,7 +9,7 @@ class MainApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("数据分析软件")
-                # 获取屏幕尺寸
+        # 获取屏幕尺寸
         screen = QGuiApplication.primaryScreen()
         screen_geometry = screen.availableGeometry()
         screen_width = screen_geometry.width()
