@@ -1,7 +1,7 @@
 import pandas as pd
 import chardet
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QFileDialog, QLabel
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, Qt
 
 class DataLoader(QWidget):
     # 定义信号
@@ -15,15 +15,18 @@ class DataLoader(QWidget):
         layout = QVBoxLayout()
 
         # 文件选择按钮
-        self.load_button = QPushButton("加载数据文件")
+        self.load_button = QPushButton("点我选择文件进行加载或者直接拖动数据文件到此窗格")
         self.load_button.clicked.connect(self.load_data)
 
         # 状态标签
-        self.status_label = QLabel("请选择文件进行加载")
+        self.status_label = QLabel("请选择文件进行加载或者直接拖动数据进入窗格")
 
         layout.addWidget(self.load_button)
         layout.addWidget(self.status_label)
         self.setLayout(layout)
+
+        # 启用拖放功能
+        self.setAcceptDrops(True)
 
     def detect_encoding(self, file_path, sample_size=1024):
         """
@@ -53,18 +56,52 @@ class DataLoader(QWidget):
                 encoding = self.detect_encoding(file_path)
 
                 # 根据文件类型加载数据
-                if file_path.endswith(".csv"):
-                    self.data = pd.read_csv(file_path, encoding=encoding)
-                elif file_path.endswith(".xlsx") or file_path.endswith(".xls"):
-                    self.data = pd.read_excel(file_path)  # Excel 文件通常不需要编码检测
-                elif file_path.endswith(".txt"):
-                    self.data = pd.read_table(file_path, encoding=encoding)
+                if file_path.endswith('.csv'):
+                    df = pd.read_csv(file_path, encoding=encoding)
+                elif file_path.endswith('.xlsx') or file_path.endswith('.xls'):
+                    df = pd.read_excel(file_path, encoding=encoding)
+                elif file_path.endswith('.txt'):
+                    df = pd.read_table(file_path, encoding=encoding)
                 else:
                     raise ValueError("不支持的文件格式")
 
-                # 更新状态标签并发送信号
-                self.status_label.setText(f"文件加载成功: {file_path} (编码: {encoding})")
-                self.data_loaded.emit(self.data)  # 发射数据加载完成信号
-
+                # 通过信号发送数据
+                self.data_loaded.emit(df)
+                self.status_label.setText(f"数据加载成功：{file_path}")
             except Exception as e:
-                self.status_label.setText(f"加载失败: {e}")
+                self.status_label.setText(f"加载数据失败: {e}")
+    
+    def dragEnterEvent(self, event):
+        """
+        拖拽进入事件，允许接受文件拖拽
+        """
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        """
+        拖拽放下事件，处理文件拖拽
+        """
+        # 获取拖拽的文件路径
+        file_path = event.mimeData().urls()[0].toLocalFile()
+
+        if file_path:
+            try:
+                # 检测文件编码
+                encoding = self.detect_encoding(file_path)
+
+                # 根据文件类型加载数据
+                if file_path.endswith('.csv'):
+                    df = pd.read_csv(file_path, encoding=encoding)
+                elif file_path.endswith('.xlsx') or file_path.endswith('.xls'):
+                    df = pd.read_excel(file_path, encoding=encoding)
+                elif file_path.endswith('.txt'):
+                    df = pd.read_table(file_path, encoding=encoding)
+                else:
+                    raise ValueError("不支持的文件格式")
+
+                # 通过信号发送数据
+                self.data_loaded.emit(df)
+                self.status_label.setText(f"数据加载成功：{file_path}")
+            except Exception as e:
+                self.status_label.setText(f"加载数据失败: {e}")
