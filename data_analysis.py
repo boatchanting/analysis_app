@@ -241,6 +241,7 @@ class DataAnalysis(QWidget):
         color = QColorDialog.getColor()
         if color.isValid():
             button.setStyleSheet(f"background-color: {color.name()}")
+            button.setProperty("selected_color", color.name())
 
     def run_analysis(self):
         """
@@ -288,6 +289,8 @@ class DataAnalysis(QWidget):
                     params[param_function] = widget.isChecked()
                 elif isinstance(widget, QListWidget):
                     params[param_function] = [item.text() for item in widget.selectedItems()]
+                elif isinstance(widget, QPushButton):
+                    params[param_function] = widget.property("selected_color") or param.get('default', '#FFFFFF')
 
         # 动态加载算法脚本
         try:
@@ -302,7 +305,7 @@ class DataAnalysis(QWidget):
             self.status_label.setText(f"算法执行失败：{e}")
 
     @staticmethod
-    def clear_layout(layout):
+    def clear_layout(layout): #用于清除布局中的所有控件
         """
         清除布局中的所有控件
         """
