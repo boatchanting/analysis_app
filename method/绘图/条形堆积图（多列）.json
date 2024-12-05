@@ -1,0 +1,28 @@
+{
+    "algorithm": "条形堆积图（多列）",
+    "description": "绘制多列数据的条形堆积图",
+    "parameters": [
+      {
+        "name": "数据列",
+        "type": "multi_column_select",
+        "function": "columns",
+        "required": true,
+        "description": "请选择要绘制的列（至少两列）"
+      },
+      {
+        "name": "颜色列表",
+        "type": "text",
+        "function": "colors",
+        "default": "",
+        "description": "设置颜色列表，用逗号分隔，例如 '#FF5733,#33FF57,#3357FF'"
+      },
+      {
+        "name": "图表标题",
+        "type": "text",
+        "function": "title",
+        "default": "条形堆积图",
+        "description": "设置图表标题"
+      }
+    ]
+  }
+  

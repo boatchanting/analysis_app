@@ -1,0 +1,42 @@
+{
+    "algorithm": "散点图（2列）",
+    "description": "绘制两列数据的散点图",
+    "parameters": [
+      {
+        "name": "X轴数据列",
+        "type": "column_select",
+        "function": "x_column",
+        "required": true,
+        "description": "请选择用于 X轴 的列"
+      },
+      {
+        "name": "Y轴数据列",
+        "type": "column_select",
+        "function": "y_column",
+        "required": true,
+        "description": "请选择用于 Y轴 的列"
+      },
+      {
+        "name": "点颜色",
+        "type": "color",
+        "function": "color",
+        "default": "#00ADEF",
+        "description": "设置散点颜色"
+      },
+      {
+        "name": "点形状",
+        "type": "text",
+        "function": "marker",
+        "default": "o",
+        "description": "设置散点形状，例如 'o', 'x', '^', 's'"
+      },
+      {
+        "name": "图表标题",
+        "type": "text",
+        "function": "title",
+        "default": "散点图",
+        "description": "设置图表标题"
+      }
+    ]
+  }
+  

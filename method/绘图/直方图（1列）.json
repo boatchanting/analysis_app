@@ -1,0 +1,36 @@
+{
+    "algorithm": "直方图（1列）",
+    "description": "绘制单列数据的直方图",
+    "parameters": [
+      {
+        "name": "数据列",
+        "type": "column_select",
+        "function": "column",
+        "required": true,
+        "description": "请选择要绘制的列"
+      },
+      {
+        "name": "柱状个数",
+        "type": "number",
+        "function": "bins",
+        "default": 10,
+        "range": [1, 100],
+        "description": "设置直方图的柱状个数"
+      },
+      {
+        "name": "柱状颜色",
+        "type": "color",
+        "function": "color",
+        "default": "#FF5733",
+        "description": "设置柱状颜色"
+      },
+      {
+        "name": "图表标题",
+        "type": "text",
+        "function": "title",
+        "default": "直方图",
+        "description": "设置图表标题"
+      }
+    ]
+  }
+  

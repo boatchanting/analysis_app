@@ -1,4 +1,4 @@
-# 折线图（1列）.py
+# \method\折线图（1列）.py
 import matplotlib.pyplot as plt
 
 def run(data, column, color="#0000FF", linestyle="-", title="折线图"):
