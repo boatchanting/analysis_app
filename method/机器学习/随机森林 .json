@@ -1,51 +1,44 @@
 {
   "algorithm": "随机森林",
-  "description": "使用随机森林进行分类任务",
+  "description": "使用随机森林分类算法对数据进行分类",
   "parameters": [
+    {
+      "name": "条件列名",
+      "type": "multi_column_select",
+      "function": "condition_columns",
+      "required": true,
+      "description": "请选择作为特征的列名（支持多选）"
+    },
     {
       "name": "目标列",
       "type": "column_select",
       "function": "target_column",
       "required": true,
-      "description": "选择目标列"
-    },
-    {
-      "name": "特征列",
-      "type": "multi_column_select",
-      "function": "feature_columns",
-      "required": true,
-      "description": "选择特征列"
-    },
-    {
-      "name": "训练集占比",
-      "type": "number",
-      "function": "test_size",
-      "default": 0.2,
-      "range": [0.1, 0.9],
-      "description": "设置训练集占比（测试集占比）"
-    },
-    {
-      "name": "是否打乱数据",
-      "type": "boolean",
-      "function": "shuffle",
-      "default": true,
-      "description": "是否在划分训练集和测试集时打乱数据"
+      "description": "请选择目标列（标签列）"
     },
     {
       "name": "树的数量",
       "type": "number",
       "function": "n_estimators",
       "default": 100,
-      "range": [10, 1000],
+      "range": [10, 500],
       "description": "随机森林中树的数量"
     },
     {
       "name": "最大深度",
       "type": "number",
       "function": "max_depth",
-      "default": null,
-      "range": [1, 50],
-      "description": "随机森林中树的最大深度（可选）"
+      "default": 1,
+      "range": [1, 100],
+      "description": "每棵树的最大深度"
+    },
+    {
+      "name": "随机种子",
+      "type": "number",
+      "function": "random_state",
+      "default": 42,
+      "range": [0, 1000],
+      "description": "设置随机种子以确保结果可复现"
     }
   ]
 }
