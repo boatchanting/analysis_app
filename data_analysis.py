@@ -27,6 +27,10 @@ class DataAnalysis(QWidget):
             self.load_algorithm_parameters()
 
     def init_ui(self):
+        """
+        初始化用户界面，设置主布局和各个控件。该方法使用QSplitter将界面分为左右两部分，
+        左侧为算法选择区域，右侧为参数设置和执行区域。
+        """
         # 主布局使用 QSplitter
         main_splitter = QSplitter(Qt.Horizontal)
 
@@ -158,7 +162,6 @@ class DataAnalysis(QWidget):
                         "name": "数据列",
                         "type": "column_select",
                         "function": "column",
-                        "required": true,
                         "description": "请选择要绘制的列"
                     }
                     """
@@ -174,7 +177,6 @@ class DataAnalysis(QWidget):
                         "name": "数据列",
                         "type": "multi_column_select",
                         "function": "column",
-                        "required": true,
                         "description": "请选择要绘制的列"
                     }
                     """
@@ -187,6 +189,13 @@ class DataAnalysis(QWidget):
                     """
                     颜色选择控件:
                     json配置示例
+                    {
+                        "name": "颜色",
+                        "type": "color",
+                        "function": "color",
+                        "default": "#FFFFFF",
+                        "description": "请选择颜色"
+                    }
                     """
                     widget = QPushButton("选择颜色")
                     widget.clicked.connect(self.select_color)
@@ -200,8 +209,6 @@ class DataAnalysis(QWidget):
                         "name": "是否显示图例",
                         "type": "boolean",
                         "function": "legend",
-                        "required": false,
-                        "default": true,
                         "description": "是否显示图例"
                     }
                     """
@@ -212,6 +219,14 @@ class DataAnalysis(QWidget):
                     """
                     数字输入框控件:
                     json配置示例
+                    {
+                        "name": "透明度",
+                        "type": "number",
+                        "function": "alpha",
+                        "range": [0, 100],
+                        "default": 50,
+                        "description": "请输入透明度"
+                    }
                     """
                     widget = QSpinBox()
                     widget.setRange(*param.get('range', [0, 100]))
@@ -223,7 +238,7 @@ class DataAnalysis(QWidget):
                     json配置示例
                     """
                     widget = QLineEdit()
-                    widget.setText(param.get('default', ''))
+                    widget.setText(param.get('default', '请输入文本'))
                     self.parameter_widgets[param['name']] = widget
                 
                 else:
@@ -232,16 +247,6 @@ class DataAnalysis(QWidget):
 
         except Exception as e:
             self.status_label.setText(f"加载参数失败：{e}")
-
-    def select_color(self):
-        """
-        打开颜色选择器
-        """
-        button = self.sender()
-        color = QColorDialog.getColor()
-        if color.isValid():
-            button.setStyleSheet(f"background-color: {color.name()}")
-            button.setProperty("selected_color", color.name())
 
     def run_analysis(self):
         """
@@ -303,6 +308,16 @@ class DataAnalysis(QWidget):
             self.status_label.setText(f"算法 {config['algorithm']} 执行成功")
         except Exception as e:
             self.status_label.setText(f"算法执行失败：{e}")
+
+    def select_color(self):
+        """
+        用于打开颜色选择器和储存颜色配置参数
+        """
+        button = self.sender()
+        color = QColorDialog.getColor()
+        if color.isValid():
+            button.setStyleSheet(f"background-color: {color.name()}")
+            button.setProperty("selected_color", color.name())
 
     @staticmethod
     def clear_layout(layout): #用于清除布局中的所有控件
