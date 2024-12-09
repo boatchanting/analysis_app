@@ -1,53 +1,60 @@
 {
-    "algorithm": "决策树",
-    "description": "使用决策树分类算法对数据进行分类",
-    "parameters": [
-      {
-        "name": "条件列名",
-        "type": "multi_column_select",
-        "function": "condition_columns",
-        "required": true,
-        "description": "请选择作为特征的列名（支持多选）"
-      },
-      {
-        "name": "目标列",
-        "type": "column_select",
-        "function": "target_column",
-        "required": true,
-        "description": "请选择目标列（标签列）"
-      },
-      {
-        "name": "最大深度",
-        "type": "number",
-        "function": "max_depth",
-        "default": 1,
-        "range": [1, 100],
-        "description": "决策树的最大深度（留空为不限制）"
-      },
-      {
-        "name": "最小样本分裂数",
-        "type": "number",
-        "function": "min_samples_split",
-        "default": 2,
-        "range": [2, 50],
-        "description": "节点分裂所需的最小样本数"
-      },
-      {
-        "name": "最小叶节点样本数",
-        "type": "number",
-        "function": "min_samples_leaf",
-        "default": 1,
-        "range": [1, 50],
-        "description": "叶节点所需的最小样本数"
-      },
-      {
-        "name": "随机种子",
-        "type": "number",
-        "function": "random_state",
-        "default": -1,
-        "range": [0, 4294967295],
-        "description": "设置随机种子以确保结果可复现"
-      }
-    ]
-  }
-  
+  "algorithm": "决策树回归",
+  "description": "使用决策树回归算法进行预测",
+  "parameters": [
+    {
+      "name": "条件列名",
+      "type": "multi_column_select",
+      "function": "condition_columns",
+      "required": true,
+      "description": "请选择作为特征的列名（支持多选）"
+    },
+    {
+      "name": "目标列",
+      "type": "column_select",
+      "function": "target_column",
+      "required": true,
+      "description": "请选择目标列（标签列）"
+    },
+    {
+      "name": "划分标准",
+      "type": "combo_box",
+      "function": "criterion",
+      "options": ["mse", "friedman_mse", "mae"],
+      "default": "mse",
+      "description": "选择划分标准（'mse'、'friedman_mse' 或 'mae'）"
+    },
+    {
+      "name": "树的最大深度",
+      "type": "number",
+      "function": "max_depth",
+      "default": null,
+      "range": [1, 100],
+      "description": "树的最大深度，设为null表示没有限制"
+    },
+    {
+      "name": "最小样本分裂数",
+      "type": "number",
+      "function": "min_samples_split",
+      "default": 2,
+      "range": [2, 100],
+      "description": "内部节点再划分所需的最小样本数"
+    },
+    {
+      "name": "最小叶子样本数",
+      "type": "number",
+      "function": "min_samples_leaf",
+      "default": 1,
+      "range": [1, 100],
+      "description": "叶子节点最少样本数"
+    },
+    {
+      "name": "随机种子",
+      "type": "number",
+      "function": "random_state",
+      "default": 42,
+      "range": [0, 100000000],
+      "description": "设置随机种子以确保结果可复现"
+    }
+  ]
+}

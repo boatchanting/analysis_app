@@ -1,0 +1,68 @@
+{
+    "algorithm": "BP神经网络分类",
+    "description": "使用BP神经网络进行分类预测",
+    "parameters": [
+      {
+        "name": "条件列名",
+        "type": "multi_column_select",
+        "function": "condition_columns",
+        "required": true,
+        "description": "请选择作为特征的列名（支持多选）"
+      },
+      {
+        "name": "目标列",
+        "type": "column_select",
+        "function": "target_column",
+        "required": true,
+        "description": "请选择目标列（标签列）"
+      },
+      {
+        "name": "隐藏层大小",
+        "type": "text",
+        "function": "hidden_layer_sizes",
+        "default": "(100,)",
+        "description": "输入隐藏层的层数和每层的神经元数量（例如： (100,)）"
+      },
+      {
+        "name": "激活函数",
+        "type": "combo_box",
+        "function": "activation",
+        "options": ["identity", "logistic", "tanh", "relu"],
+        "default": "relu",
+        "description": "选择激活函数"
+      },
+      {
+        "name": "优化器",
+        "type": "combo_box",
+        "function": "solver",
+        "options": ["lbfgs", "sgd", "adam"],
+        "default": "adam",
+        "description": "选择优化算法"
+      },
+      {
+        "name": "最大迭代次数",
+        "type": "number",
+        "function": "max_iter",
+        "default": 200,
+        "range": [100, 10000],
+        "description": "设置最大迭代次数"
+      },
+      {
+        "name": "正则化参数",
+        "type": "decimal_input",
+        "function": "alpha",
+        "default": 0.0001,
+        "range": [0.0001, 1],
+        "description": "正则化参数，用于防止过拟合"
+      },
+      {
+        "name": "随机种子",
+        "type": "number",
+        "function": "random_state",
+        "default": 42,
+        "range": [0, 100000000],
+        "description": "设置随机种子以确保结果可复现"
+      }
+    ]
+  }
+  

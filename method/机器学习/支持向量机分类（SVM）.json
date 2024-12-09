@@ -1,0 +1,69 @@
+{
+    "algorithm": "SVM分类",
+    "description": "使用支持向量机进行分类预测",
+    "parameters": [
+      {
+        "name": "条件列名",
+        "type": "multi_column_select",
+        "function": "condition_columns",
+        "required": true,
+        "description": "请选择作为特征的列名（支持多选）"
+      },
+      {
+        "name": "目标列",
+        "type": "column_select",
+        "function": "target_column",
+        "required": true,
+        "description": "请选择目标列（标签列）"
+      },
+      {
+        "name": "核函数",
+        "type": "combo_box",
+        "function": "kernel",
+        "options": ["linear", "poly", "rbf", "sigmoid"],
+        "default": "rbf",
+        "description": "选择核函数类型"
+      },
+      {
+        "name": "惩罚参数 C",
+        "type": "decimal_input",
+        "function": "C",
+        "default": 1.0,
+        "range": [0.01, 100],
+        "description": "控制分类器的复杂度，越大越复杂"
+      },
+      {
+        "name": "核函数系数 gamma",
+        "type": "combo_box",
+        "function": "gamma",
+        "options": ["scale", "auto"],
+        "default": "scale",
+        "description": "选择核函数的系数，'scale'为1 / (n_features * X.var())"
+      },
+      {
+        "name": "多项式核度数 degree",
+        "type": "number",
+        "function": "degree",
+        "default": 3,
+        "range": [1, 5],
+        "description": "多项式核函数的度数（仅适用于'poly'核）"
+      },
+      {
+        "name": "核函数常数项 coef0",
+        "type": "decimal_input",
+        "function": "coef0",
+        "default": 0.0,
+        "range": [-5, 5],
+        "description": "核函数的常数项（仅适用于'poly'或'sigmoid'核）"
+      },
+      {
+        "name": "随机种子",
+        "type": "number",
+        "function": "random_state",
+        "default": 42,
+        "range": [0, 100000000],
+        "description": "设置随机种子以确保结果可复现"
+      }
+    ]
+  }
+  

@@ -1,0 +1,77 @@
+{
+    "algorithm": "XGBoost分类",
+    "description": "使用XGBoost分类算法进行预测",
+    "parameters": [
+      {
+        "name": "条件列名",
+        "type": "multi_column_select",
+        "function": "condition_columns",
+        "required": true,
+        "description": "请选择作为特征的列名（支持多选）"
+      },
+      {
+        "name": "目标列",
+        "type": "column_select",
+        "function": "target_column",
+        "required": true,
+        "description": "请选择目标列（标签列）"
+      },
+      {
+        "name": "弱学习器数量",
+        "type": "number",
+        "function": "n_estimators",
+        "default": 100,
+        "range": [50, 1000],
+        "description": "XGBoost中的弱学习器数量"
+      },
+      {
+        "name": "最大深度",
+        "type": "number",
+        "function": "max_depth",
+        "default": 3,
+        "range": [1, 10],
+        "description": "树的最大深度"
+      },
+      {
+        "name": "学习率",
+        "type": "decimal_input",
+        "function": "learning_rate",
+        "default": 0.1,
+        "range": [0.01, 1],
+        "description": "学习率（每一步的步长）"
+      },
+      {
+        "name": "gamma",
+        "type": "number",
+        "function": "gamma",
+        "default": 0,
+        "range": [0, 10],
+        "description": "正则化参数，控制每棵树的复杂度"
+      },
+      {
+        "name": "子样本比例",
+        "type": "decimal_input",
+        "function": "subsample",
+        "default": 1,
+        "range": [0.1, 1],
+        "description": "用于训练的样本比例（避免过拟合）"
+      },
+      {
+        "name": "特征子样本比例",
+        "type": "decimal_input",
+        "function": "colsample_bytree",
+        "default": 1,
+        "range": [0.1, 1],
+        "description": "每棵树使用的特征子样本比例"
+      },
+      {
+        "name": "随机种子",
+        "type": "number",
+        "function": "random_state",
+        "default": 42,
+        "range": [0, 100000000],
+        "description": "设置随机种子以确保结果可复现"
+      }
+    ]
+  }
+  

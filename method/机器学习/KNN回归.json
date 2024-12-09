@@ -1,0 +1,77 @@
+{
+    "algorithm": "KNN回归",
+    "description": "使用K近邻回归算法进行预测",
+    "parameters": [
+      {
+        "name": "条件列名",
+        "type": "multi_column_select",
+        "function": "condition_columns",
+        "required": true,
+        "description": "请选择作为特征的列名（支持多选）"
+      },
+      {
+        "name": "目标列",
+        "type": "column_select",
+        "function": "target_column",
+        "required": true,
+        "description": "请选择目标列（标签列）"
+      },
+      {
+        "name": "邻居数量",
+        "type": "number",
+        "function": "n_neighbors",
+        "default": 5,
+        "range": [1, 100],
+        "description": "选择邻居的数量"
+      },
+      {
+        "name": "权重函数",
+        "type": "combo_box",
+        "function": "weights",
+        "options": ["uniform", "distance"],
+        "default": "uniform",
+        "description": "选择权重函数（'uniform' 或 'distance'）"
+      },
+      {
+        "name": "算法",
+        "type": "combo_box",
+        "function": "algorithm",
+        "options": ["auto", "ball_tree", "kd_tree", "brute"],
+        "default": "auto",
+        "description": "选择用于计算最近邻的算法"
+      },
+      {
+        "name": "树的叶子大小",
+        "type": "number",
+        "function": "leaf_size",
+        "default": 30,
+        "range": [10, 100],
+        "description": "树的叶子大小（影响计算效率）"
+      },
+      {
+        "name": "距离度量方式",
+        "type": "combo_box",
+        "function": "metric",
+        "options": ["minkowski", "euclidean", "manhattan", "chebyshev", "seuclidean", "mahalanobis"],
+        "default": "minkowski",
+        "description": "选择距离度量方式"
+      },
+      {
+        "name": "距离度量幂",
+        "type": "number",
+        "function": "p",
+        "default": 2,
+        "range": [1, 10],
+        "description": "距离度量的幂参数（1为曼哈顿距离，2为欧氏距离）"
+      },
+      {
+        "name": "随机种子",
+        "type": "number",
+        "function": "random_state",
+        "default": 42,
+        "range": [0, 100000000],
+        "description": "设置随机种子以确保结果可复现"
+      }
+    ]
+  }
+  
