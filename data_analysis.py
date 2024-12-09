@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, QComboBox, QLineEdit, QListWidget, QCheckBox, QColorDialog, QSpinBox, QSplitter
 )
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QDoubleValidator, QIntValidator
 import importlib
 
 class DataAnalysis(QWidget):
@@ -217,7 +218,7 @@ class DataAnalysis(QWidget):
                     self.parameter_widgets[param['name']] = widget
                 elif param['type'] == 'number':
                     """
-                    数字输入框控件:
+                    整数输入框控件:
                     json配置示例
                     {
                         "name": "透明度",
@@ -228,10 +229,40 @@ class DataAnalysis(QWidget):
                         "description": "请输入透明度"
                     }
                     """
-                    widget = QSpinBox()
-                    widget.setRange(*param.get('range', [0, 100]))
-                    widget.setValue(param.get('default', 0))
+                    widget = QLineEdit()
+                    # 设置默认值
+                    widget.setText(str(param.get('default', 0)))
+                    # 设置占位符文本
+                    widget.setPlaceholderText(f"请输入{param['name']}（范围：{param.get('range')[0]} 到 {param.get('range')[1]}）")
+                    
+                    # 设置输入验证器，限制为整数，并指定范围
+                    validator = QIntValidator(param.get('range')[0], param.get('range')[1])
+                    widget.setValidator(validator)
+                    
                     self.parameter_widgets[param['name']] = widget
+
+                elif param['type'] == 'decimal_input':
+                    """
+                    小数输入控件:
+                    json配置示例
+                    {
+                        "name": "学习率",
+                        "type": "decimal_input",
+                        "function": "learning_rate",
+                        "default": 0.01,
+                        "range": [0.0001, 1],
+                        "description": "设置学习率（范围：0.0001 到 1）"
+                    }
+                    """
+                    widget = QLineEdit()
+                    widget.setPlaceholderText(f"请输入 {param['name']}（范围：{param.get('range')[0]} 到 {param.get('range')[1]}）")
+                    widget.setValidator(QDoubleValidator(param.get('range')[0], param.get('range')[1], 4))  # 限制为小数，最多四位
+                    if 'default' in param:
+                        widget.setText(str(param['default']))
+                    self.parameter_widgets[param['name']] = widget
+                    label = QLabel(param['name'])
+                    self.parameter_layout.addWidget(label)
+                    self.parameter_layout.addWidget(widget)
                 elif param['type'] == 'text': # 文本框控件
                     """
                     文本输入框控件:
@@ -239,7 +270,8 @@ class DataAnalysis(QWidget):
                     """
                     widget = QLineEdit()
                     widget.setText(param.get('default', '请输入文本'))
-                    self.parameter_widgets[param['name']] = widget
+                    self.parameter_widgets[param['name']] = widget                
+            
                 
                 else:
                     widget = QLabel("未知参数类型")
@@ -287,7 +319,12 @@ class DataAnalysis(QWidget):
                 if isinstance(widget, QComboBox):
                     params[param_function] = widget.currentText()
                 elif isinstance(widget, QLineEdit):
-                    params[param_function] = widget.text()
+                    # 获取小数输入值
+                    if isinstance(widget.validator(), QDoubleValidator):
+                        params[param_function] = float(widget.text())
+                    # 获取整数输入值
+                    elif isinstance(widget.validator(), QIntValidator):
+                        params[param_function] = int(widget.text())
                 elif isinstance(widget, QSpinBox):
                     params[param_function] = widget.value()
                 elif isinstance(widget, QCheckBox):
