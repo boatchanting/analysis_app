@@ -1,6 +1,6 @@
 # DL/drop_event.py
-
-def dropEvent(self, event):
+import pandas as pd
+def drop_event(self, event):
     """
     拖拽放下事件，处理文件拖拽
     """

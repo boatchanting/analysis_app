@@ -2,7 +2,7 @@
 
 from PyQt5.QtCore import Qt
 
-def dragEnterEvent(self, event):
+def drag_enter_event(self, event):
     """
     拖拽进入事件，允许接受文件拖拽
     """
