@@ -34,7 +34,7 @@
       },
       {
         "name": "学习率",
-        "type": "decimal_input",
+        "type": "float",
         "function": "learning_rate",
         "default": 0.1,
         "range": [0.01, 1],

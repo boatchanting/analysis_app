@@ -26,7 +26,7 @@
       },
       {
         "name": "惩罚参数 C",
-        "type": "decimal_input",
+        "type": "float",
         "function": "C",
         "default": 1.0,
         "range": [0.01, 100],
@@ -50,7 +50,7 @@
       },
       {
         "name": "核函数常数项 coef0",
-        "type": "decimal_input",
+        "type": "float",
         "function": "coef0",
         "default": 0.0,
         "range": [-5, 5],

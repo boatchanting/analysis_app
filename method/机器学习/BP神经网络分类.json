@@ -49,7 +49,7 @@
       },
       {
         "name": "正则化参数",
-        "type": "decimal_input",
+        "type": "float",
         "function": "alpha",
         "default": 0.0001,
         "range": [0.0001, 1],
